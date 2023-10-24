@@ -65,6 +65,47 @@ This readme provides an overview of a Flask web application that utilizes SQLAlc
 
 By following these steps, you'll successfully install and run the project from the GitHub repository on your local machine.
 
-## IMPLEMENTED
+## Implemented Features
 
-## NOT IMPLEMENTED
+1. **List of Books:**
+
+   - You can view a list of all books by navigating to `/books/list`.
+   - The application successfully displays a list of books in HTML format.
+
+2. **List of Users:**
+
+   - You can view a list of all users by navigating to `/users/list`.
+   - The application successfully displays a list of users in HTML format.
+
+3. **List of Loans:**
+
+   - You can view a list of all loans by navigating to `/loans/list`.
+   - The application successfully displays a list of loans in HTML format.
+
+## Not Yet Implemented
+
+The following features have not been fully implemented in the current version of the application:
+
+1. **Display a Single Book:**
+
+   - The application lacks a feature to display a single book's details.
+
+2. **Add a Book:**
+
+   - There is no functionality to add a new book to the database.
+
+3. **Edit a Book:**
+
+   - The application does not allow you to edit or update information for existing books.
+
+4. **Delete a Book:**
+
+   - There is no functionality to delete books from the database.
+
+5. **User Management:**
+
+   - User-specific functionality, such as displaying a single user, adding, editing, or deleting users, is not yet implemented.
+
+6. **Loan Management:**
+
+   - Similar to users, there is no functionality to display, add, edit, or delete individual loans.
