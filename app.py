@@ -15,30 +15,35 @@ db = SQLAlchemy(app)
 
 
 # Object Classes
-
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     author = db.Column(db.String(255), nullable=False)
     year_published = db.Column(db.Integer, nullable=False)
     stock = db.Column(db.Integer, nullable=False)
+
     def __init__(self, title, author, year_published, stock):
         self.title = title
         self.author = author
         self.year_published = year_published
         self.stock = stock
+
     loans = relationship('Loan', backref='book', lazy=True)
-       
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     city = db.Column(db.String(255), nullable=False)
     age = db.Column(db.Integer, nullable=False)
+
     def __init__(self, name, city, age):
         self.name = name
         self.city = city
         self.age = age
+
     loans = relationship('Loan', backref='user', lazy=True)
+
 
 class Loan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -55,8 +60,6 @@ class Loan(db.Model):
         self.loan_length = loan_length
         self.returned = False
 
-    
-
 
 # Create the database tables
 with app.app_context():
@@ -68,6 +71,7 @@ with app.app_context():
 def get_books():
     books = Book.query.all()
     book_list = []
+
     for book in books:
         book_data = {
             "id": book.id,
@@ -77,7 +81,35 @@ def get_books():
             "stock": book.stock
         }
         book_list.append(book_data)
+
     return jsonify({"books": book_list})
+
+
+@app.route('/books/<int:book_id>', methods=["GET", "PUT"])
+def get_or_soft_delete_book(book_id):
+    book = Book.query.get(book_id)
+    
+    if not book:
+        return jsonify({"error": "Book not found"}), 404
+
+    if request.method == "PUT":
+        # Soft-delete the book by updating its attributes
+        book.title = "DELETED BOOK"
+        book.author = "null"
+        book.year_published = "null"
+        book.stock = 0  # You can set stock to 0 to indicate it's not in stock
+        db.session.commit()
+        return jsonify({"message": "Book deleted successfully"})
+
+    book_data = {
+        "id": book.id,
+        "title": book.title,
+        "author": book.author,
+        "year_published": book.year_published,
+        "stock": book.stock
+    }
+
+    return jsonify({"book": book_data})
 
 
 # Route to add a new book
@@ -88,6 +120,7 @@ def add_book():
     author = data.get("author")
     year_published = data.get("year_published")
     stock = data.get("stock")
+
     if title and author and year_published and stock:
         new_book = Book(title=title, author=author, year_published=year_published, stock=stock)
         db.session.add(new_book)
@@ -106,6 +139,7 @@ def update_book(book_id):
     year_published = data.get("year_published")
     stock = data.get("stock")
     book = Book.query.get(book_id)
+
     if not book:
         return jsonify({"error": "Book not found"}), 404
     if title:
@@ -120,25 +154,12 @@ def update_book(book_id):
     return jsonify({"message": "Book updated successfully"})
 
 
-# Route to delete a book by ID
-@app.route('/books/<int:book_id>/delete', methods=["PUT"])
-def delete_book(book_id):
-    book = Book.query.get(book_id)
-    if not book:
-        return jsonify({"error": "Book not found"}), 404
-    book.title = "DELETED BOOK"
-    book.author = "null"
-    book.year_published = "null"
-    book.stock = "null"
-    db.session.commit()
-    return jsonify({"message": "Book deleted successfully"})
-
-
 # Route to get all users
 @app.route('/users', methods=["GET"])
 def get_users():
     users = User.query.all()
     user_list = []
+
     for user in users:
         user_data = {
             "id": user.id,
@@ -147,7 +168,33 @@ def get_users():
             "age": user.age
         }
         user_list.append(user_data)
+
     return jsonify({"users": user_list})
+
+
+@app.route('/users/<int:user_id>', methods=["GET", "PUT"])
+def get_or_soft_delete_user(user_id):
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if request.method == "PUT":
+        # Soft-delete the user by updating its attributes
+        user.name = "DELETED USER"
+        user.age = "null"
+        user.city = "null"
+        db.session.commit()
+        return jsonify({"message": "User deleted successfully"})
+
+    user_data = {
+        "id": user.id,
+        "name": user.name,
+        "age": user.age,
+        "city": user.city
+    }
+
+    return jsonify({"user": user_data})
 
 
 # Route to add a new user
@@ -186,19 +233,6 @@ def update_user(user_id):
     return jsonify({"message": "User updated successfully"})
 
 
-# Route to delete a user by ID
-@app.route('/users/<int:user_id>/delete', methods=["PUT"])
-def delete_user(user_id):
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-    user.name = "DELETED USER"
-    user.city = "null"
-    user.age = "null"
-    db.session.commit()
-    return jsonify({"message": "User deleted successfully"})
-
-
 # Route to get all loans
 @app.route('/loans', methods=["GET"])
 def get_loans():
@@ -214,6 +248,33 @@ def get_loans():
         }
         loan_list.append(loan_data)
     return jsonify({"loans": loan_list})
+
+
+@app.route('/loans/<int:loan_id>', methods=["GET", "PUT"])
+def get_or_soft_delete_loan(loan_id):
+    loan = Loan.query.get(loan_id)
+    
+    if not loan:
+        return jsonify({"error": "Loan not found"}), 404
+
+    if request.method == "PUT":
+        # Soft-delete the loan by updating its attributes
+        loan.book_id = "DELETED loan"
+        loan.user_id = "null"
+        loan.loan_date = "null"
+        loan.loan_length = "null"
+        db.session.commit()
+        return jsonify({"message": "Loan deleted successfully"})
+
+    loan_data = {
+        "id": loan.id,
+        "book_id": loan.book_id,
+        "user_id": loan.user_id,
+        "loan_date": loan.loan_date,
+        "loan_length": loan.loan_length
+    }
+
+    return jsonify({"loan": loan_data})
 
 
 # Route to add a new loan
@@ -296,21 +357,6 @@ def update_loan(loan_id):
             db.session.commit()
 
     return jsonify({"message": "Loan updated successfully"})
-
-
-# Route to delete a loan by ID
-@app.route('/loans/<int:loan_id>/delete', methods=["PUT"])
-def delete_loan(loan_id):
-    loan = Loan.query.get(loan_id)
-    if not loan:
-        return jsonify({"error": "Loan not found"}), 404
-    loan.book_id = "DELETED LOAN"
-    loan.user_id = "null"
-    loan.loan_date = "null"
-    loan.loan_length = "null"
-    loan.returned = "null"
-    db.session.commit()
-    return jsonify({"message": "Loan deleted successfully"})
 
 
 if __name__ == '__main__':
