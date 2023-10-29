@@ -66,6 +66,11 @@ with app.app_context():
     db.create_all()
 
 
+# index.html route
+@app.route('/')
+def index():
+    return render_template("index.html")
+
 # Route to list all books
 @app.route('/books', methods=["GET"])
 def list_books():
@@ -144,7 +149,7 @@ def add_book():
 
 # Route to edit a book by ID
 @app.route('/books/<int:book_id>/edit', methods=["PUT"])
-def update_book(book_id):
+def edit_book(book_id):
     data = request.json
     title = data.get("title")
     author = data.get("author")
@@ -239,8 +244,8 @@ def add_user():
     return render_template("user_add.html")
 
 
-# Route to update a user by ID
-@app.route('/users/<int:user_id>/update', methods=["PUT"])
+# Route to edit a user by ID
+@app.route('/users/<int:user_id>/edit', methods=["PUT"])
 def update_user(user_id):
     data = request.json
     name = data.get("name")
@@ -276,8 +281,6 @@ def get_loans():
     return jsonify({"loans": loan_list})
 
 
-
-
 # Route to add a new loan
 @app.route('/loans/add', methods=["POST"])
 def add_loan():
@@ -289,7 +292,6 @@ def add_loan():
     returned = False
    
     if book_id and user_id and loan_date and loan_length:
-        # Check if the book exists
         book = Book.query.get(book_id)
         if not book:
             return jsonify({"error": "Book not found"}), 404
@@ -298,17 +300,14 @@ def add_loan():
         if not user:
             return jsonify({"error": "User not found"}), 404
        
-        # Check if there are enough books in stock
         if book.stock <= 0:
             return jsonify({"error": "No more copies of this book in stock"}), 400
        
-        # Check if the requested loan length is valid
         if 1 <= loan_length <= 365:
             new_loan = Loan(book_id=book_id, user_id=user_id, loan_date=loan_date, loan_length=loan_length)
             db.session.add(new_loan)
             db.session.commit()
            
-            # Update the stock of the book
             book.stock -= 1
             db.session.commit()
            
@@ -319,25 +318,20 @@ def add_loan():
         return jsonify({"error": "Book ID, user ID, loan date, and loan length are required."}), 400
 
 
-
-
-# Route to update a loan by ID
-@app.route('/loans/<int:loan_id>/update', methods=["PUT"])
-def update_loan(loan_id):
+# Route to edit a loan by ID
+@app.route('/loans/<int:loan_id>/edit', methods=["PUT"])
+def edit_loan(loan_id):
     data = request.json
     book_id = data.get("book_id")
     user_id = data.get("user_id")
     loan_date = data.get("loan_date")
     loan_length = data.get("loan_length")
-    returned = data.get("returned")  # New field to specify return status
-
+    returned = data.get("returned")
 
     loan = Loan.query.get(loan_id)
     if not loan:
         return jsonify({"error": "Loan not found"}), 404
 
-
-    # Check the previous return status before updating
     previous_returned = loan.returned
    
     if book_id:
@@ -349,24 +343,17 @@ def update_loan(loan_id):
     if loan_length:
         loan.loan_length = loan_length
     if returned is not None:
-        loan.returned = returned  # Update the return status
-
+        loan.returned = returned
 
     db.session.commit()
 
-
-    # Check if the return status has changed from False to True
     if not previous_returned and loan.returned:
-        # The book has been returned, increase the stock of the relevant book by 1
         book = Book.query.get(loan.book_id)
         if book:
             book.stock += 1
             db.session.commit()
 
-
-    return jsonify({"message": "Loan updated successfully"})
-
-
+    return jsonify({"message": "Loan edited successfully"})
 
 
 # Route to delete a loan by ID

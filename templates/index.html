@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library Management Program</title>
+</head>
+<body>
+    <h1>Welcome to the Library Management Program</h1>
+    <p>Choose route:</p>
+    <button onclick="window.location.href='/books'">Book List</button>
+    <button onclick="window.location.href='/users'">User List</button>
+    <button onclick="showLoansWarning()">Loan List</button>
+
+    <script>
+        function showLoansWarning() {
+            if (confirm("The Loans management is JSON-based and does not look like a traditional website. Do you want to proceed?")) {
+                window.location.href = '/loans';
+            }
+        }
+    </script>
+</body>
+</html>
