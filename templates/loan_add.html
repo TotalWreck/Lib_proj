@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Loan</title>
+</head>
+<body>
+    <h1>Add a New Loan</h1>
+    <form id="addLoanForm">
+        <label for="book_id">Book ID:</label><br>
+        <input type="number" id="book_id" name="book_id" required><br>
+
+        <label for="user_id">User ID:</label><br>
+        <input type="number" id="user_id" name="user_id" required><br>
+
+        <label for="loan_date">Loan Date:</label><br>
+        <input type="date" id="loan_date" name="loan_date" required><br>
+
+        <label for="loan_length">Loan Length (in days):</label><br>
+        <input type="number" id="loan_length" name="loan_length" required><br>
+
+        <input type="submit" value="Add Loan">
+    </form>
+    
+    <button onclick="window.location.href='/loans'">Return to Loan List</button>
+
+    <p id="message"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.getElementById("addLoanForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            var formData = {
+                book_id: document.getElementById("book_id").value,
+                user_id: document.getElementById("user_id").value,
+                loan_date: document.getElementById("loan_date").value,
+                loan_length: document.getElementById("loan_length").value
+            };
+
+            axios.post('/loans/add', formData)
+                .then(function (response) {
+                    if (response.status === 200 && response.data.message) {
+                        document.getElementById("message").innerHTML = "<span style='color: green;'>" + response.data.message + "</span>";
+                        clearFormFields();
+                    } else {
+                        document.getElementById("message").innerHTML = "<span style='color: red;'>Failed to add loan.</span>";
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+        });
+
+        function clearFormFields() {
+            document.getElementById("book_id").value = "";
+            document.getElementById("user_id").value = "";
+            document.getElementById("loan_date").value = "";
+            document.getElementById("loan_length").value = "";
+        }
+    </script>
+</body>
+</html>

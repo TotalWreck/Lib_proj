@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Users List</title>
+</head>
+<body>
+    <h1>Users List</h1>
+    <button id="addUserButton">Add User</button>
+    <ul id="userList"></ul>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function fetchUsers() {
+            axios.get('/users')
+                .then(function (response) {
+                    const users = response.data.users;
+                    const userList = document.getElementById('userList');
+
+                    users.forEach(function (user, index) {
+                        const listItem = document.createElement('li');
+                        const userLink = document.createElement('a');
+                        userLink.href = `/users/${user.id}`;
+                        userLink.textContent = `${index + 1}. Name: ${user.name}, City: ${user.city}, Age: ${user.age}`;
+
+                        listItem.appendChild(userLink);
+                        userList.appendChild(listItem);
+                    });
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+
+        fetchUsers();
+
+        document.getElementById('addUserButton').addEventListener('click', function () {
+            window.location.href = '/users/add';
+        });
+    </script>
+</body>
+</html>

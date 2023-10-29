@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Information</title>
+</head>
+<body>
+    <h1>User Information</h1>
+    <div id="userInfo">
+        <p><strong>Name:</strong> <span id="name"></span></p>
+        <p><strong>City:</strong> <span id="city"></span></p>
+        <p><strong>Age:</strong> <span id="age"></span></p>
+    </div>
+
+    <button id="deleteButton">Delete User</button>
+    <button id="returnToUsers">Return to list</button>
+    <div id="deleteMessage" style="display: none;">User deleted successfully</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function fetchUserInfo() {
+            const url = window.location.href;
+            const userId = url.substring(url.lastIndexOf('/') + 1);
+
+            axios.get(`/users/${userId}`)
+                .then(function (response) {
+                    const user = response.data.user;
+
+                    document.getElementById('name').textContent = user.name;
+                    document.getElementById('city').textContent = user.city;
+                    document.getElementById('age').textContent = user.age;
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+
+            document.getElementById('deleteButton').addEventListener('click', function () {
+                if (confirm("Are you sure you want to delete this user?")) {
+                    axios.put(`/users/${userId}`)
+                        .then(function (response) {
+                            document.getElementById('deleteMessage').style.display = 'block';
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                        });
+                }
+            });
+
+            document.getElementById('returnToUsers').addEventListener('click', function () {
+                window.location.href = '/users';
+            });
+        }
+
+        fetchUserInfo();
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Book List</title>
+</head>
+
+<body>
+    <h1>Book List</h1>
+    <button id="addBookButton">Add Book</button>
+    <ul id="bookList"></ul>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function fetchBooks() {
+            axios.get('/books')
+                .then(function (response) {
+                    const books = response.data.books;
+                    const bookList = document.getElementById('bookList');
+
+                    books.forEach(function (book, index) {
+                        const listItem = document.createElement('li');
+                        const bookLink = document.createElement('a');
+                        bookLink.href = `/books/${book.id}`;
+                        bookLink.textContent = `${index + 1}. Title: ${book.title}, Author: ${book.author}, Year Published: ${book.year_published}, Stock: ${book.stock}`;
+
+                        listItem.appendChild(bookLink);
+                        bookList.appendChild(listItem);
+                    });
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+        }
+
+        fetchBooks();
+
+        document.getElementById('addBookButton').addEventListener('click', function () {
+            window.location.href = '/books/add';
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Information</title>
+</head>
+<body>
+    <h1>Loan Information</h1>
+    <div id="loanInfo">
+        <p><strong>Book:</strong> <span id="bookName"></span></p>
+        <p><strong>User:</strong> <span id="userName"></span></p>
+        <p><strong>Loan Date:</strong> <span id="loanDate"></span></p>
+        <p><strong>Loan Length:</strong> <span id="loanLength"></span> days</p>
+    </div>
+
+    <button id="deleteButton">Delete Loan</button>
+    <button id="returnButton" style="display: none;">Return Book</button>
+    <button id="returnToLoans">Return to list</button>
+    <div id="deleteMessage" style="display: none;">Loan deleted successfully</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function fetchLoanInfo() {
+            const url = window.location.href;
+            const loanId = url.substring(url.lastIndexOf('/') + 1);
+
+            axios.get(`/loans/${loanId}`)
+                .then(function (response) {
+                    const loan = response.data.loan;
+
+                    document.getElementById('bookName').textContent = loan.book_name;
+                    document.getElementById('userName').textContent = loan.user_name;
+                    document.getElementById('loanDate').textContent = loan.loan_date;
+                    document.getElementById('loanLength').textContent = loan.loan_length;
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+
+            document.getElementById('deleteButton').addEventListener('click', function () {
+                if (confirm("Are you sure you want to delete this loan?")) {
+                    axios.put(`/loans/${loanId}`)
+                        .then(function (response) {
+                            document.getElementById('deleteMessage').style.display = 'block';
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                        });
+                }
+            });
+
+            document.getElementById('returnToLoans').addEventListener('click', function () {
+                window.location.href = '/loans';
+            });
+        }
+
+        fetchLoanInfo();
+    </script>
+</body>
+</html>

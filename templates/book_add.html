@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Book</title>
+</head>
+<body>
+    <h1>Add a New Book</h1>
+    <form id="addBookForm" onsubmit="addBook(event)">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title" required><br>
+
+        <label for="author">Author:</label><br>
+        <input type="text" id="author" name="author" required><br>
+
+        <label for="year_published">Year Published:</label><br>
+        <input type number id="year_published" name="year_published" required><br>
+
+        <label for="stock">Stock:</label><br>
+        <input type="number" id="stock" name="stock" required><br>
+
+        <input type="submit" value="Add Book">
+    </form>
+    
+    <button onclick="window.location.href='/books'">Return to Book List</button>
+
+    <p id="message"></p>
+
+    <script>
+        function addBook(event) {
+            event.preventDefault();
+            var formData = new FormData(document.getElementById("addBookForm"));
+
+            fetch('/books/add', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById("message").innerHTML = "<span style='color: green;'>" + data.message + "</span>";
+                    clearFormFields();
+                } else {
+                    document.getElementById("message").innerHTML = "<span style='color: red;'>" + data.message + "</span>";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function clearFormFields() {
+            document.getElementById("title").value = "";
+            document.getElementById("author").value = "";
+            document.getElementById("year_published").value = "";
+            document.getElementById("stock").value = "";
+        }
+    </script>
+</body>
+</html>

@@ -66,9 +66,9 @@ with app.app_context():
     db.create_all()
 
 
-# Route to get all books
+# Route to list all books
 @app.route('/books', methods=["GET"])
-def get_books():
+def list_books():
     books = Book.query.all()
     book_list = []
 
@@ -82,22 +82,26 @@ def get_books():
         }
         book_list.append(book_data)
 
-    return jsonify({"books": book_list})
+    response_data = {"books": book_list}
 
+    if "application/json" in request.headers.get("Accept"):
+        return jsonify(response_data)
+    else:
+        return render_template('book_list.html', books=response_data)
 
+# Route to retrieve or delete a specific book
 @app.route('/books/<int:book_id>', methods=["GET", "PUT"])
-def get_or_soft_delete_book(book_id):
+def retrieve_or_delete_book(book_id):
     book = Book.query.get(book_id)
     
     if not book:
         return jsonify({"error": "Book not found"}), 404
 
     if request.method == "PUT":
-        # Soft-delete the book by updating its attributes
         book.title = "DELETED BOOK"
-        book.author = "null"
-        book.year_published = "null"
-        book.stock = 0  # You can set stock to 0 to indicate it's not in stock
+        book.author = "n/a"
+        book.year_published = "n/a"
+        book.stock = 0
         db.session.commit()
         return jsonify({"message": "Book deleted successfully"})
 
@@ -109,29 +113,37 @@ def get_or_soft_delete_book(book_id):
         "stock": book.stock
     }
 
-    return jsonify({"book": book_data})
+    response_data = {"book": book_data}
 
+    if "application/json" in request.headers.get("Accept"):
+        return jsonify(response_data)
+    else:
+        return render_template('book_id.html', book=response_data)
 
 # Route to add a new book
-@app.route('/books/add', methods=["POST"])
+@app.route('/books/add', methods=["GET", "POST"])
 def add_book():
-    data = request.json
-    title = data.get("title")
-    author = data.get("author")
-    year_published = data.get("year_published")
-    stock = data.get("stock")
+    if request.method == "POST":
+        title = request.form.get("title")
+        author = request.form.get("author")
+        year_published = request.form.get("year_published")
+        stock = request.form.get("stock")
 
-    if title and author and year_published and stock:
-        new_book = Book(title=title, author=author, year_published=year_published, stock=stock)
-        db.session.add(new_book)
-        db.session.commit()
-        return jsonify({"message": "Book added successfully"})
-    else:
-        return jsonify({"error": "Title, author, publishing year and stock are required fields"}), 400
+        if title and author and year_published and stock:
+            new_book = Book(title=title, author=author, year_published=int(year_published), stock=int(stock))
+            db.session.add(new_book)
+            db.session.commit()
+            response = {"message": "Book added successfully", "status": "success"}
+            return jsonify(response), 200
+
+        response = {"message": "Invalid or missing data. Please fill in all fields with valid data.", "status": "failure"}
+        return jsonify(response), 400
+
+    return render_template("book_add.html")
 
 
-# Route to update a book by ID
-@app.route('/books/<int:book_id>/update', methods=["PUT"])
+# Route to edit a book by ID
+@app.route('/books/<int:book_id>/edit', methods=["PUT"])
 def update_book(book_id):
     data = request.json
     title = data.get("title")
@@ -151,7 +163,7 @@ def update_book(book_id):
     if stock:
         book.stock = stock
     db.session.commit()
-    return jsonify({"message": "Book updated successfully"})
+    return jsonify({"message": "Book edited successfully"})
 
 
 # Route to get all users
@@ -169,48 +181,62 @@ def get_users():
         }
         user_list.append(user_data)
 
-    return jsonify({"users": user_list})
+    response_data = {"users": user_list}
+
+    if "application/json" in request.headers.get("Accept"):
+        return jsonify(response_data)
+    else:
+        return render_template('user_list.html')
 
 
+# Route to retrieve or delete a specific book
 @app.route('/users/<int:user_id>', methods=["GET", "PUT"])
-def get_or_soft_delete_user(user_id):
+def retrieve_or_delete_user(user_id):
     user = User.query.get(user_id)
-    
+
     if not user:
         return jsonify({"error": "User not found"}), 404
 
     if request.method == "PUT":
-        # Soft-delete the user by updating its attributes
-        user.name = "DELETED USER"
-        user.age = "null"
-        user.city = "null"
+        # Delete the user (you can customize this as needed)
+        db.session.delete(user)
         db.session.commit()
         return jsonify({"message": "User deleted successfully"})
 
     user_data = {
         "id": user.id,
         "name": user.name,
-        "age": user.age,
-        "city": user.city
+        "city": user.city,
+        "age": user.age
     }
 
-    return jsonify({"user": user_data})
+    response_data = {"user": user_data}
+
+    if "application/json" in request.headers.get("Accept"):
+        return jsonify(response_data)
+    else:
+        return render_template('user_id.html', user=response_data)
 
 
 # Route to add a new user
-@app.route('/users/add', methods=["POST"])
+@app.route('/users/add', methods=["GET", "POST"])
 def add_user():
-    data = request.json
-    name = data.get("name")
-    city = data.get("city")
-    age = data.get("age")
-    if name and age:
-        new_user = User(name=name, city=city, age=age)
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({"message": "User added successfully"})
-    else:
-        return jsonify({"error": "Full name, city and age are required fields"}), 400
+    if request.method == "POST":
+        name = request.form.get("name")
+        city = request.form.get("city")
+        age = request.form.get("age")
+
+        if name and city and age:
+            new_user = User(name=name, city=city, age=int(age))
+            db.session.add(new_user)
+            db.session.commit()
+            response = {"message": "User added successfully", "status": "success"}
+            return jsonify(response), 200
+
+        response = {"message": "Invalid or missing data. Please fill in all fields with valid data.", "status": "failure"}
+        return jsonify(response), 400
+
+    return render_template("user_add.html")
 
 
 # Route to update a user by ID
@@ -250,31 +276,6 @@ def get_loans():
     return jsonify({"loans": loan_list})
 
 
-@app.route('/loans/<int:loan_id>', methods=["GET", "PUT"])
-def get_or_soft_delete_loan(loan_id):
-    loan = Loan.query.get(loan_id)
-    
-    if not loan:
-        return jsonify({"error": "Loan not found"}), 404
-
-    if request.method == "PUT":
-        # Soft-delete the loan by updating its attributes
-        loan.book_id = "DELETED loan"
-        loan.user_id = "null"
-        loan.loan_date = "null"
-        loan.loan_length = "null"
-        db.session.commit()
-        return jsonify({"message": "Loan deleted successfully"})
-
-    loan_data = {
-        "id": loan.id,
-        "book_id": loan.book_id,
-        "user_id": loan.user_id,
-        "loan_date": loan.loan_date,
-        "loan_length": loan.loan_length
-    }
-
-    return jsonify({"loan": loan_data})
 
 
 # Route to add a new loan
@@ -286,36 +287,38 @@ def add_loan():
     loan_date = data.get("loan_date")
     loan_length = data.get("loan_length")
     returned = False
-    
+   
     if book_id and user_id and loan_date and loan_length:
         # Check if the book exists
         book = Book.query.get(book_id)
         if not book:
             return jsonify({"error": "Book not found"}), 404
-        
+       
         user = User.query.get(user_id)
         if not user:
             return jsonify({"error": "User not found"}), 404
-        
+       
         # Check if there are enough books in stock
         if book.stock <= 0:
             return jsonify({"error": "No more copies of this book in stock"}), 400
-        
+       
         # Check if the requested loan length is valid
         if 1 <= loan_length <= 365:
             new_loan = Loan(book_id=book_id, user_id=user_id, loan_date=loan_date, loan_length=loan_length)
             db.session.add(new_loan)
             db.session.commit()
-            
+           
             # Update the stock of the book
             book.stock -= 1
             db.session.commit()
-            
+           
             return jsonify({"message": "Loan added successfully"})
         else:
             return jsonify({"error": "Length of loan is invalid, must be between 1 and 365 days."})
     else:
         return jsonify({"error": "Book ID, user ID, loan date, and loan length are required."}), 400
+
+
 
 
 # Route to update a loan by ID
@@ -328,13 +331,15 @@ def update_loan(loan_id):
     loan_length = data.get("loan_length")
     returned = data.get("returned")  # New field to specify return status
 
+
     loan = Loan.query.get(loan_id)
     if not loan:
         return jsonify({"error": "Loan not found"}), 404
 
+
     # Check the previous return status before updating
     previous_returned = loan.returned
-    
+   
     if book_id:
         loan.book_id = book_id
     if user_id:
@@ -346,7 +351,9 @@ def update_loan(loan_id):
     if returned is not None:
         loan.returned = returned  # Update the return status
 
+
     db.session.commit()
+
 
     # Check if the return status has changed from False to True
     if not previous_returned and loan.returned:
@@ -356,7 +363,25 @@ def update_loan(loan_id):
             book.stock += 1
             db.session.commit()
 
+
     return jsonify({"message": "Loan updated successfully"})
+
+
+
+
+# Route to delete a loan by ID
+@app.route('/loans/<int:loan_id>/delete', methods=["PUT"])
+def delete_loan(loan_id):
+    loan = Loan.query.get(loan_id)
+    if not loan:
+        return jsonify({"error": "Loan not found"}), 404
+    loan.book_id = "DELETED LOAN"
+    loan.user_id = "null"
+    loan.loan_date = "null"
+    loan.loan_length = "null"
+    loan.returned = "null"
+    db.session.commit()
+    return jsonify({"message": "Loan deleted successfully"})
 
 
 if __name__ == '__main__':

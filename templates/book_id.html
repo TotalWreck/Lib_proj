@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Information</title>
+</head>
+<body>
+    <h1>Book Information</h1>
+    <div id="bookInfo">
+        <p><strong>Title:</strong> <span id="title"></span></p>
+        <p><strong>Author:</strong> <span id="author"></span></p>
+        <p><strong>Year Published:</strong> <span id="yearPublished"></span></p>
+        <p><strong>Stock:</strong> <span id="stock"></span></p>
+    </div>
+
+    <button id="deleteButton">Delete Book</button>
+    <button id="returnToBooks">Return to list</button>
+    <div id="deleteMessage" style="display: none;">Book deleted successfully</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function fetchBookInfo() {
+            const url = window.location.href;
+            const bookId = url.substring(url.lastIndexOf('/') + 1);
+
+            axios.get(`/books/${bookId}`)
+                .then(function (response) {
+                    const book = response.data.book;
+
+                    document.getElementById('title').textContent = book.title;
+                    document.getElementById('author').textContent = book.author;
+                    document.getElementById('yearPublished').textContent = book.year_published;
+                    document.getElementById('stock').textContent = book.stock;
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
+
+            document.getElementById('deleteButton').addEventListener('click', function () {
+                if (confirm("Are you sure you want to delete this book?")) {
+                    axios.put(`/books/${bookId}`)
+                        .then(function (response) {
+                            document.getElementById('deleteMessage').style.display = 'block';
+                        })
+                        .catch(function (error) {
+                            console.error(error);
+                        });
+                }
+            });
+
+            document.getElementById('returnToBooks').addEventListener('click', function () {
+                window.location.href = '/books';
+            });
+        }
+
+        fetchBookInfo();
+    </script>
+</body>
+</html>

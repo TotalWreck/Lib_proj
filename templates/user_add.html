@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add User</title>
+</head>
+<body>
+    <h1>Add a New User</h1>
+    <form id="addUserForm" onsubmit="addUser(event)">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="city">City:</label><br>
+        <input type="text" id="city" name="city" required><br>
+
+        <label for="age">Age:</label><br>
+        <input type="number" id="age" name="age" required><br>
+
+        <input type="submit" value="Add User">
+    </form>
+    
+    <button onclick="window.location.href='/users'">Return to User List</button>
+
+    <p id="message"></p>
+
+    <script>
+        function addUser(event) {
+            event.preventDefault();
+            var formData = new FormData(document.getElementById("addUserForm"));
+
+            fetch('/users/add', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById("message").innerHTML = "<span style='color: green;'>" + data.message + "</span>";
+                    clearFormFields();
+                } else {
+                    document.getElementById("message").innerHTML = "<span style='color: red;'>" + data.message + "</span>";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function clearFormFields() {
+            document.getElementById("name").value = "";
+            document.getElementById("city").value = "";
+            document.getElementById("age").value = "";
+        }
+    </script>
+</body>
+</html>
